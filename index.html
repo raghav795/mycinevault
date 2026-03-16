@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="MyCineVault - Your personal movie tracking app">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <title>MyCineVault</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            dark: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      background-color: #0f172a;
+      overscroll-behavior: none;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    .animate-slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .animate-scale-in {
+      animation: scaleIn 0.2s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .movie-card {
+      transition: all 0.3s ease;
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+    
+    .star-btn {
+      transition: all 0.15s ease;
+    }
+    
+    .star-btn:hover {
+      transform: scale(1.2);
+    }
+    
+    .btn-primary {
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: scale(1.02);
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Hide scrollbar on mobile for cleaner look */
+    @media (max-width: 768px) {
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      body {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    }
+  </style>
+</head>
+<body class="bg-dark-900 text-white min-h-screen">
+  
+  <!-- Header -->
+  <header class="bg-dark-800/80 backdrop-blur-lg border-b border-dark-700 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+            </svg>
+          </div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-primary-400 to-purple-400 bg-clip-text text-transparent">
+            MyCineVault
+          </h1>
+        </div>
+        <button onclick="openAddModal()" class="btn-primary bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span class="hidden sm:inline">Add Movie</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="bg-dark-800/50 border-b border-dark-700">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex gap-1">
+        <button id="tab-watchlist" onclick="switchTab('watchlist')" class="tab-btn px-5 py-3 font-medium text-dark-400 hover:text-white transition-all border-b-2 border-transparent">
+          📋 Watchlist (<span id="watchlist-count">0</span>)
+        </button>
+        <button id="tab-watched" onclick="switchTab('watched')" class="tab-btn px-5 py-3 font-medium text-dark-400 hover:text-white transition-all border-b-2 border-transparent">
+          ✅ Watched (<span id="watched-count">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-dark-900 border-b border-dark-800 py-4">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex flex-wrap gap-3">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="search-input" placeholder="Search movies..." 
+              class="w-full pl-10 pr-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+          </div>
+        </div>
+        
+        <!-- Language Filter -->
+        <select id="filter-language" class="px-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[140px]">
+          <option value="">All Languages</option>
+        </select>
+        
+        <!-- Genre Filter -->
+        <select id="filter-genre" class="px-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[130px]">
+          <option value="">All Genres</option>
+        </select>
+        
+        <!-- Rating Filter (only visible in Watched tab) -->
+        <select id="filter-rating" class="px-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[130px]">
+          <option value="">All Ratings</option>
+          <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+          <option value="4">⭐⭐⭐⭐ (4+)</option>
+          <option value="3">⭐⭐⭐ (3+)</option>
+          <option value="2">⭐⭐ (2+)</option>
+          <option value="1">⭐ (1+)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movie Grid -->
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <div id="movies-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Movies will be rendered here -->
+    </div>
+    
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <div class="w-24 h-24 bg-dark-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-12 h-12 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+        </svg>
+      </div>
+      <h3 id="empty-title" class="text-xl font-semibold text-dark-300 mb-2">No movies yet</h3>
+      <p id="empty-subtitle" class="text-dark-500 mb-6">Start by adding a movie to your list</p>
+      <button onclick="openAddModal()" class="btn-primary bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Your First Movie
+      </button>
+    </div>
+  </main>
+
+  <!-- Add/Edit Movie Modal -->
+  <div id="movie-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-dark-800 rounded-2xl border border-dark-700 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto animate-scale-in">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 id="modal-title" class="text-xl font-bold">Add Movie</h2>
+          <button onclick="closeModal()" class="text-dark-400 hover:text-white transition-colors p-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="movie-form" onsubmit="saveMovie(event)">
+          <input type="hidden" id="movie-id">
+          
+          <!-- Title (Required) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">
+              Title <span class="text-red-400">*</span>
+            </label>
+            <input type="text" id="movie-title" required placeholder="Enter movie title"
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          </div>
+          
+          <!-- Language (Required) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">
+              Language <span class="text-red-400">*</span>
+            </label>
+            <select id="movie-language" required
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              <option value="">Select language</option>
+              <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Tamil">Tamil</option>
+              <option value="Telugu">Telugu</option>
+              <option value="Malayalam">Malayalam</option>
+              <option value="Kannada">Kannada</option>
+              <option value="Korean">Korean</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Spanish">Spanish</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Italian">Italian</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="Russian">Russian</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          
+          <!-- Genre (Optional) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Genre</label>
+            <select id="movie-genre"
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              <option value="">Select genre (optional)</option>
+              <option value="Action">Action</option>
+              <option value="Adventure">Adventure</option>
+              <option value="Animation">Animation</option>
+              <option value="Comedy">Comedy</option>
+              <option value="Crime">Crime</option>
+              <option value="Documentary">Documentary</option>
+              <option value="Drama">Drama</option>
+              <option value="Fantasy">Fantasy</option>
+              <option value="Horror">Horror</option>
+              <option value="Mystery">Mystery</option>
+              <option value="Romance">Romance</option>
+              <option value="Sci-Fi">Sci-Fi</option>
+              <option value="Thriller">Thriller</option>
+              <option value="War">War</option>
+              <option value="Western">Western</option>
+            </select>
+          </div>
+          
+          <!-- Director (Optional) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Director</label>
+            <input type="text" id="movie-director" placeholder="e.g., Christopher Nolan"
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          </div>
+          
+          <!-- Actors (Optional) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Actors</label>
+            <input type="text" id="movie-actors" placeholder="e.g., Leonardo DiCaprio, Tom Hardy"
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+          </div>
+          
+          <!-- Add to (Watchlist/Watched) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Add to</label>
+            <div class="flex gap-3">
+              <label class="flex-1">
+                <input type="radio" name="movie-status" value="watchlist" checked class="peer hidden">
+                <div class="px-4 py-3 bg-dark-900 border-2 border-dark-600 rounded-lg text-center cursor-pointer peer-checked:border-primary-500 peer-checked:bg-primary-500/10 transition-all">
+                  📋 Watchlist
+                </div>
+              </label>
+              <label class="flex-1">
+                <input type="radio" name="movie-status" value="watched" class="peer hidden">
+                <div class="px-4 py-3 bg-dark-900 border-2 border-dark-600 rounded-lg text-center cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all">
+                  ✅ Watched
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Rating (Only shown when Watched is selected) -->
+          <div id="rating-section" class="mb-4 hidden">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Your Rating</label>
+            <div class="flex gap-1" id="rating-stars">
+              <button type="button" onclick="setRating(1)" class="star-btn text-3xl text-dark-500 hover:text-yellow-400" data-star="1">☆</button>
+              <button type="button" onclick="setRating(2)" class="star-btn text-3xl text-dark-500 hover:text-yellow-400" data-star="2">☆</button>
+              <button type="button" onclick="setRating(3)" class="star-btn text-3xl text-dark-500 hover:text-yellow-400" data-star="3">☆</button>
+              <button type="button" onclick="setRating(4)" class="star-btn text-3xl text-dark-500 hover:text-yellow-400" data-star="4">☆</button>
+              <button type="button" onclick="setRating(5)" class="star-btn text-3xl text-dark-500 hover:text-yellow-400" data-star="5">☆</button>
+            </div>
+            <input type="hidden" id="movie-rating" value="0">
+          </div>
+          
+          <!-- Notes (Optional) -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-dark-300 mb-2">Notes</label>
+            <textarea id="movie-notes" rows="3" placeholder="Your thoughts, who recommended it, etc."
+              class="w-full px-4 py-2.5 bg-dark-900 border border-dark-600 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
+          </div>
+          
+          <!-- Buttons -->
+          <div class="flex gap-3">
+            <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-medium rounded-lg transition-all">
+              Cancel
+            </button>
+            <button type="submit" class="flex-1 btn-primary bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg font-medium">
+              Save Movie
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move to Watched Modal -->
+  <div id="move-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-dark-800 rounded-2xl border border-dark-700 shadow-2xl w-full max-w-md mx-4 animate-scale-in">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold">Mark as Watched</h2>
+          <button onclick="closeMoveModal()" class="text-dark-400 hover:text-white transition-colors p-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <p class="text-dark-300 mb-4">Rate "<span id="move-movie-title" class="text-white font-medium"></span>":</p>
+        
+        <input type="hidden" id="move-movie-id">
+        
+        <div class="flex justify-center gap-2 mb-6" id="move-rating-stars">
+          <button type="button" onclick="setMoveRating(1)" class="star-btn text-4xl text-dark-500 hover:text-yellow-400" data-star="1">☆</button>
+          <button type="button" onclick="setMoveRating(2)" class="star-btn text-4xl text-dark-500 hover:text-yellow-400" data-star="2">☆</button>
+          <button type="button" onclick="setMoveRating(3)" class="star-btn text-4xl text-dark-500 hover:text-yellow-400" data-star="3">☆</button>
+          <button type="button" onclick="setMoveRating(4)" class="star-btn text-4xl text-dark-500 hover:text-yellow-400" data-star="4">☆</button>
+          <button type="button" onclick="setMoveRating(5)" class="star-btn text-4xl text-dark-500 hover:text-yellow-400" data-star="5">☆</button>
+        </div>
+        <input type="hidden" id="move-rating" value="0">
+        
+        <div class="flex gap-3">
+          <button onclick="closeMoveModal()" class="flex-1 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-medium rounded-lg transition-all">
+            Cancel
+          </button>
+          <button onclick="confirmMoveToWatched()" class="flex-1 btn-primary bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium">
+            ✓ Mark Watched
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-dark-800 rounded-2xl border border-dark-700 shadow-2xl w-full max-w-sm mx-4 animate-scale-in">
+      <div class="p-6 text-center">
+        <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Delete Movie?</h3>
+        <p class="text-dark-400 mb-6">Are you sure you want to delete "<span id="delete-movie-title" class="text-white"></span>"?</p>
+        <input type="hidden" id="delete-movie-id">
+        <div class="flex gap-3">
+          <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-dark-700 hover:bg-dark-600 text-white font-medium rounded-lg transition-all">
+            Cancel
+          </button>
+          <button onclick="confirmDelete()" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-dark-700 border border-dark-600 rounded-lg shadow-xl z-50 hidden animate-slide-up">
+    <p id="toast-message" class="text-white font-medium"></p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
