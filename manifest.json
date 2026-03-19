@@ -2,7 +2,7 @@
   "name": "MyCineVault",
   "short_name": "MyCineVault",
   "description": "Your personal movie tracking app - Track watched movies and your wishlist",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
