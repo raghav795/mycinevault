@@ -1,12 +1,10 @@
 // MyCineVault Service Worker
-const CACHE_NAME = 'mycinevault-v1';
+const CACHE_NAME = 'mycinevault-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/app.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  './',
+  './index.html',
+  './app.js',
+  './manifest.json'
 ];
 
 // Install Service Worker
